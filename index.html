@@ -3,12 +3,367 @@
 <head>
   <meta charset="utf-8" />
   <title>내 매물 지도</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      margin: 0;
+    }
+    #map {
+      width: 100%;
+      height: 100vh;
+      transition: width 0.3s ease;
+    }
+    #map.shrink {
+      width: 70%;
+    }
+    #details {
+      width: 30%;
+      height: 100vh;
+      padding: 20px;
+      border-left: 1px solid #ccc;
+      display: none;
+      flex-direction: column;
+      background: #f9fafb;
+      box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    #details.show {
+      display: flex;
+    }
+    #details .info {
+      margin-top: 16px;
+      padding: 16px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    #details .info pre {
+      font-family: inherit;
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: #374151;
+    }
+    #closeBtn {
+      align-self: flex-end;
+      cursor: pointer;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #e5e7eb;
+      color: #111;
+      font-weight: bold;
+      margin-bottom: 12px;
+      transition: background 0.2s ease;
+    }
+    #closeBtn:hover {
+      background: #d1d5db;
+    }
+  </style>
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=b8a9ef4d346809e74a0150503c6a3cd9&autoload=false&libraries=services"></script>
+  <script>
+    const locations = [
+  {
+    title: "동진하임빌",
+    address: "서울 강서구 화곡동 370-33",
+    price: "26000",
+    desc: `🏠 동진하임빌
+📍 화곡동 370-33
+
+💰 매매가: 26000 / 단+3
+📐 전용면적: 56.23㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2009
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "그린힐",
+    address: "서울 강서구 화곡동 80-55",
+    price: "25500",
+    desc: `🏠 그린힐
+📍 화곡동 80-55
+
+💰 매매가: 25500 / 단+10
+📐 전용면적: 34.18㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2014
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "로제트힐",
+    address: "궁동 292",
+    price: "32700",
+    desc: `🏠 로제트힐
+📍 궁동 292
+
+💰 매매가: 32700 / 단+6
+📐 전용면적: 50.2㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2016
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "삼익헤스티아",
+    address: "서울 강서구 화곡동 1129-29",
+    price: "25000",
+    desc: `🏠 삼익헤스티아
+📍 화곡동 1129-29
+
+💰 매매가: 25000 / 단+7
+📐 전용면적: 33.11㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2011
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "주석리치빌",
+    address: "경기도 김포시 고촌읍 신곡리 547-5",
+    price: "32000",
+    desc: `🏠 주석리치빌
+📍 신곡리 547-5
+
+💰 매매가: 32000 / 단+7
+📐 전용면적: 57.59㎡
+🛏 구조: 방 4 / 화장실 2
+📅 사용승인일: 2018
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "에이앤캐슬",
+    address: "서울 양천구 목동 713-9",
+    price: "32000",
+    desc: `🏠 에이앤캐슬
+📍 목동 713-9
+
+💰 매매가: 32000 / 단+7
+📐 전용면적: 52.97㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2019
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "더라운지",
+    address: "서울 도봉구 도봉동 614-35",
+    price: "43000",
+    desc: `🏠 더라운지
+📍 도봉동 614-35
+
+💰 매매가: 43000 / 단+15
+📐 전용면적: 53.63㎡
+🛏 구조: 3/2복층
+📅 사용승인일: 2021
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "메종드로제",
+    address: "서울 강서구 화곡동 926-3",
+    price: "37500",
+    desc: `🏠 메종드로제
+📍 화곡동 926-3
+
+💰 매매가: 37500 / 단+3
+📐 전용면적: 49.26㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2019
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "골든빌",
+    address: "서울 강서구 화곡동 1079-13",
+    price: "28500",
+    desc: `🏠 골든빌
+📍 화곡동 1079-13
+
+💰 매매가: 28500 / 단+3
+📐 전용면적: 50.81㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2009
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "등촌퀸즈포디엄삼익",
+    address: "서울 강서구 등촌동 511-4",
+    price: "39000",
+    desc: `🏠 등촌퀸즈포디엄삼익
+📍 등촌동 511-4
+
+💰 매매가: 39000 / 단+3
+📐 전용면적: 44.8㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2020
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "한울뜨란채",
+    address: "서울 강서구 화곡동 995-20",
+    price: "29500",
+    desc: `🏠 한울뜨란채
+📍 화곡동 995-20
+
+💰 매매가: 29500 / 단+3
+📐 전용면적: 58.52㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2011
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "오케이파크빌",
+    address: "서울 강서구 화곡동 932-8",
+    price: "26000",
+    desc: `🏠 오케이파크빌
+📍 화곡동 932-8
+
+💰 매매가: 26000 / 단+7
+📐 전용면적: 38.88㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2015
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "신목동비바힐스",
+    address: "서울 양천구 신월동 981-2",
+    price: "52000",
+    desc: `🏠 신목동비바힐스
+📍 신월동 981-2
+
+💰 매매가: 52000 / 단
+📐 전용면적: 64.63㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2022
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "삼광퀸즈빌",
+    address: "서울 강서구 외발산동 217-12",
+    price: "18000",
+    desc: `🏠 삼광퀸즈빌
+📍 외발산동 217-12
+
+💰 매매가: 18000 / 단+7
+📐 전용면적: 44.97㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2002
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "까사지오",
+    address: "서울 강서구 화곡동 423-17",
+    price: "22000",
+    desc: `🏠 까사지오
+📍 화곡동 423-17
+
+💰 매매가: 22000 / 단+1
+📐 전용면적: 30.3㎡
+🛏 구조: 방 3 / 화장실 1
+📅 사용승인일: 2015
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "동건수목원",
+    address: "서울 구로구 오류동 201-3",
+    price: "33000",
+    desc: `🏠 동건수목원
+📍 오류동 201-3
+
+💰 매매가: 33000 / 단+10
+📐 전용면적: 46.42㎡
+🛏 구조: 방 3 / 화장실 2
+📅 사용승인일: 2018
+
+📞 담당자 : 장팀장 010-5745-5377`
+  },
+  {
+    title: "프라임빌",
+    address: "서울 강서구 화곡동 102-23",
+    price: "25000",
+    desc: `🏠 프라임빌
+📍 화곡동 102-23
+
+💰 매매가: 25000 / 단+7
+📐 전용면적: 27.93㎡
+🛏 구조: 방 2 / 화장실 1
+📅 사용승인일: 2019
+
+📞 담당자 : 장팀장 010-5745-5377`
+  }
+];
+
+    const markerContentStyle = (title, price, index) => `
+      <div onclick="showDetails(${index})"
+        style="cursor: pointer; position: relative; background: #2563eb; color: #fff; padding: 6px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+        ${title}<br>${price}
+        <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+          width: 0; height: 0;
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-top: 10px solid #2563eb;"></div>
+      </div>`;
+
+    window.onload = function () {
+      kakao.maps.load(function () {
+        const mapContainer = document.getElementById('map');
+        const mapOption = {
+          center: new kakao.maps.LatLng(37.5500, 126.8500),
+          level: 5
+        };
+        const map = new kakao.maps.Map(mapContainer, mapOption);
+        const geocoder = new kakao.maps.services.Geocoder();
+
+        const detailBox = document.getElementById('details');
+        const detailInfo = document.getElementById('detail-info');
+        const closeBtn = document.getElementById('closeBtn');
+        closeBtn.onclick = () => {
+          detailBox.classList.remove('show');
+          mapContainer.classList.remove('shrink');
+        };
+
+        locations.forEach((loc, index) => {
+          geocoder.addressSearch(loc.address, function (result, status) {
+            if (status === kakao.maps.services.Status.OK) {
+              const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+              const overlay = new kakao.maps.CustomOverlay({
+                map: map,
+                position: coords,
+                content: markerContentStyle(loc.title, loc.price, index),
+                yAnchor: 1
+              });
+            }
+          });
+        });
+      });
+    };
+
+    function showDetails(index) {
+      const loc = locations[index];
+      document.getElementById('detail-info').innerHTML = `<pre>${loc.desc}</pre>`;
+      document.getElementById('details').classList.add('show');
+      document.getElementById('map').classList.add('shrink');
+    }
+  </script>
 </head>
 <body>
-  <div id="map" style="width:100%;height:100vh;"></div>
-  <script>
-    // 지도 및 마커 코드 (생략됨 - 이미 반영된 상태)
-  </script>
+  <div id="map"></div>
+  <div id="details">
+    <button id="closeBtn">닫기 ✖</button>
+    <div class="info">
+      <div id="detail-info"></div>
+    </div>
+  </div>
 </body>
 </html>
